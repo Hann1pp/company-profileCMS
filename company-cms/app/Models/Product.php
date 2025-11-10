@@ -18,5 +18,11 @@ class Product extends Model
         'price',
         'image',
         'is_active',
+        'category', // REVISI: Kolom Kategori ditambahkan
+    ];
+
+    // Opsional: Cast is_active sebagai boolean
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 }

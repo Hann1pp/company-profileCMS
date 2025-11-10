@@ -51,11 +51,6 @@
                                 <i class="bi bi-folder2-open"></i> Projects
                             </a>
                             
-                        </li>
-                        
-                        <li class="nav-item"><h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted"><span>Konfigurasi</span></h6></li>
-                        <li class="nav-item"><a class="nav-link @if(Request::is('admin/settings*')) active @endif" href="{{ route('admin.settings.show') }}"><i class="bi bi-house"></i> Profil Perusahaan</a></li>
-                    </ul>
                 </div>
             </nav>
 

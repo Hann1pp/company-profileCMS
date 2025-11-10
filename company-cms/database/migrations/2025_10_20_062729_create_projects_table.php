@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('client_name')->nullable();
             $table->year('year');
             $table->string('thumbnail')->nullable();
+            $table->string('category')->nullable()->after('thumbnail');
             
             // Perubahan Krusial: Mengganti is_featured menjadi status
             $table->string('status')->default('Regular'); 

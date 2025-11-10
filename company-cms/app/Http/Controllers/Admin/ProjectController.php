@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str; // Tambahkan ini untuk helper slug
 
 class ProjectController extends Controller
 {
@@ -44,9 +45,24 @@ class ProjectController extends Controller
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', 
             // Revisi: Mengubah validasi menjadi 'boolean' yang lebih aman untuk nilai 0/1.
             'is_featured' => 'nullable|boolean', 
+            // ASUMSI: Anda juga mungkin punya field 'category', 'challenge', 'solution', 'result'
+            'category' => 'nullable|string|max:255',
+            'challenge' => 'nullable|string',
+            'solution' => 'nullable|string',
+            'result' => 'nullable|string',
         ]);
 
-        // 2. Menentukan Status dan Thumbnail
+        // 2. LOGIKA SLUG
+        // Slug dibuat otomatis dari title
+        $slug = Str::slug($validatedData['title']);
+        $count = Project::where('slug', $slug)->count();
+        if ($count > 0) {
+            $slug .= '-' . ($count + 1);
+        }
+        $validatedData['slug'] = $slug;
+
+
+        // 3. Menentukan Status dan Thumbnail
         
         // Status: Jika is_featured = 1, status = 'Unggulan', jika tidak = 'Regular'
         $validatedData['status'] = $request->input('is_featured') == 1 ? 'Unggulan' : 'Regular';
@@ -61,7 +77,7 @@ class ProjectController extends Controller
             $validatedData['thumbnail'] = $request->file('thumbnail')->store('thumbnails/projects', 'public');
         }
 
-        // 3. Menyimpan ke database
+        // 4. Menyimpan ke database
         Project::create($validatedData);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project berhasil ditambahkan.');
@@ -91,13 +107,30 @@ class ProjectController extends Controller
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
             // Revisi: Mengubah validasi menjadi 'boolean' yang lebih aman untuk nilai 0/1.
             'is_featured' => 'nullable|boolean', 
+            // ASUMSI: Anda juga mungkin punya field 'category', 'challenge', 'solution', 'result'
+            'category' => 'nullable|string|max:255',
+            'challenge' => 'nullable|string',
+            'solution' => 'nullable|string',
+            'result' => 'nullable|string',
         ]);
+        
+        // 2. LOGIKA SLUG (Hanya generate jika judul berubah dan/atau slug belum ada)
+        if ($validatedData['title'] !== $project->title || empty($project->slug)) {
+            $slug = Str::slug($validatedData['title']);
+            // Pastikan slug unik, kecuali untuk dirinya sendiri
+            $count = Project::where('slug', $slug)->where('id', '!=', $project->id)->count();
+            if ($count > 0) {
+                $slug .= '-' . ($count + 1);
+            }
+            $validatedData['slug'] = $slug;
+        }
 
-        // 2. Menentukan Status
+
+        // 3. Menentukan Status
         $validatedData['status'] = $request->input('is_featured') == 1 ? 'Unggulan' : 'Regular';
         unset($validatedData['is_featured']); 
 
-        // 3. Mengupload Thumbnail Baru
+        // 4. Mengupload Thumbnail Baru
         if ($request->hasFile('thumbnail')) {
             // Hapus thumbnail lama jika ada
             if ($project->thumbnail) {
@@ -114,7 +147,7 @@ class ProjectController extends Controller
              unset($validatedData['thumbnail']);
         }
         
-        // 4. Memperbarui database
+        // 5. Memperbarui database
         $project->update($validatedData);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project berhasil diperbarui.');
